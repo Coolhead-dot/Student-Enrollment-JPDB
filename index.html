@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Student Enrollment Form</title>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://login2explore.com/jpdb/resources/js/0.0.3/jpdb-commons.js"></script>
+
+    <script>
+        var rec_no = "";
+        var jpdbBaseURL = "http://api.login2explore.com:5577";
+        var jpdbIRL = "/api/irl";
+        var jpdbIML = "/api/iml";
+
+        var dbName = "SCHOOL-DB";
+        var relName = "STUDENT-TABLE";
+        var connToken = "90935292|-31949238469042886|90958135";
+
+        function disableAll() {
+            document.getElementById("fullName").disabled = true;
+            document.getElementById("class").disabled = true;
+            document.getElementById("birthDate").disabled = true;
+            document.getElementById("address").disabled = true;
+            document.getElementById("enrollDate").disabled = true;
+
+            document.getElementById("saveBtn").disabled = true;
+            document.getElementById("updateBtn").disabled = true;
+            document.getElementById("resetBtn").disabled = true;
+        }
+
+        function resetForm() {
+            document.getElementById("rollNo").value = "";
+            document.getElementById("fullName").value = "";
+            document.getElementById("class").value = "";
+            document.getElementById("birthDate").value = "";
+            document.getElementById("address").value = "";
+            document.getElementById("enrollDate").value = "";
+
+            document.getElementById("rollNo").disabled = false;
+            disableAll();
+            document.getElementById("rollNo").focus();
+        }
+
+        function getStudent() {
+            var roll = document.getElementById("rollNo").value;
+
+            if (roll === "") return;
+
+            var getReq = createGET_BY_KEYRequest(connToken, dbName, relName, JSON.stringify({ Roll_No: roll }));
+
+            jQuery.ajaxSetup({ async: false });
+            var res = executeCommandAtGivenBaseUrl(getReq, jpdbBaseURL, jpdbIRL);
+            jQuery.ajaxSetup({ async: true });
+
+            if (res.status === 400) {
+                // New record
+                document.getElementById("saveBtn").disabled = false;
+                document.getElementById("resetBtn").disabled = false;
+
+                document.getElementById("fullName").disabled = false;
+                document.getElementById("class").disabled = false;
+                document.getElementById("birthDate").disabled = false;
+                document.getElementById("address").disabled = false;
+                document.getElementById("enrollDate").disabled = false;
+
+                document.getElementById("fullName").focus();
+            } else {
+                // Existing record
+                var dataObj = JSON.parse(res.data);
+                rec_no = dataObj.rec_no;  
+                var data = dataObj.record;
+
+                document.getElementById("fullName").value = data.Full_Name;
+                document.getElementById("class").value = data.Class;
+                document.getElementById("birthDate").value = data.Birth_Date;
+                document.getElementById("address").value = data.Address;
+                document.getElementById("enrollDate").value = data.Enrollment_Date;
+
+                document.getElementById("rollNo").disabled = true;
+
+                document.getElementById("updateBtn").disabled = false;
+                document.getElementById("resetBtn").disabled = false;
+
+                document.getElementById("fullName").disabled = false;
+                document.getElementById("class").disabled = false;
+                document.getElementById("birthDate").disabled = false;
+                document.getElementById("address").disabled = false;
+                document.getElementById("enrollDate").disabled = false;
+
+                document.getElementById("fullName").focus();
+            }
+        }
+
+        function validateForm() {
+            if (
+                document.getElementById("rollNo").value === "" ||
+                document.getElementById("fullName").value === "" ||
+                document.getElementById("class").value === "" ||
+                document.getElementById("birthDate").value === "" ||
+                document.getElementById("address").value === "" ||
+                document.getElementById("enrollDate").value === ""
+            ) {
+                alert("All fields are required!");
+                return false;
+            }
+            return true;
+        }
+
+        function saveData() {
+            if (!validateForm()) return;
+
+            var jsonStr = JSON.stringify({
+                Roll_No: document.getElementById("rollNo").value,
+                Full_Name: document.getElementById("fullName").value,
+                Class: document.getElementById("class").value,
+                Birth_Date: document.getElementById("birthDate").value,
+                Address: document.getElementById("address").value,
+                Enrollment_Date: document.getElementById("enrollDate").value
+            });
+
+            var req = createPUTRequest(connToken, jsonStr, dbName, relName);
+
+            jQuery.ajaxSetup({ async: false });
+            executeCommandAtGivenBaseUrl(req, jpdbBaseURL, jpdbIML);
+            jQuery.ajaxSetup({ async: true });
+
+            alert("Data Saved Successfully!");
+            resetForm();
+        }
+
+        function updateData() {
+            if (!validateForm()) return;
+
+            var jsonStr = JSON.stringify({
+                Roll_No: document.getElementById("rollNo").value,
+                Full_Name: document.getElementById("fullName").value,
+                Class: document.getElementById("class").value,
+                Birth_Date: document.getElementById("birthDate").value,
+                Address: document.getElementById("address").value,
+                Enrollment_Date: document.getElementById("enrollDate").value
+            });
+
+            var req = createUPDATERecordRequest(connToken, jsonStr, dbName, relName, rec_no);
+
+            jQuery.ajaxSetup({ async: false });
+            executeCommandAtGivenBaseUrl(req, jpdbBaseURL, jpdbIML);
+            jQuery.ajaxSetup({ async: true });
+
+            alert("Data Updated Successfully!");
+            resetForm();
+        }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 30px;
+        color: white;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        transition: 0.3s;
+    }
+
+    .glass-card:hover {
+        transform: scale(1.02);
+    }
+
+    .form-control {
+        border-radius: 10px;
+    }
+
+    .btn-custom {
+        border-radius: 20px;
+        padding: 10px 20px;
+        transition: 0.3s;
+    }
+
+    .btn-success:hover {
+        transform: scale(1.05);
+    }
+
+    .btn-warning:hover {
+        transform: scale(1.05);
+    }
+
+    .btn-danger:hover {
+        transform: scale(1.05);
+    }
+
+    h2 {
+        font-weight: bold;
+    }
+</style>
+
+<body onload="resetForm()">
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height:100vh;">
+    
+    <div class="glass-card col-md-6">
+
+        <h2 class="text-center mb-4">🎓 Student Enrollment</h2>
+
+        <div class="mb-3">
+            <label>Roll No</label>
+            <input type="text" id="rollNo" class="form-control" onblur="getStudent()">
+        </div>
+
+        <div class="mb-3">
+            <label>Full Name</label>
+            <input type="text" id="fullName" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label>Class</label>
+            <input type="text" id="class" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label>Birth Date</label>
+            <input type="date" id="birthDate" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label>Address</label>
+            <input type="text" id="address" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label>Enrollment Date</label>
+            <input type="date" id="enrollDate" class="form-control">
+        </div>
+
+        <div class="text-center mt-4">
+            <button id="saveBtn" class="btn btn-success btn-custom me-2" onclick="saveData()">Save</button>
+            <button id="updateBtn" class="btn btn-warning btn-custom me-2" onclick="updateData()">Update</button>
+            <button id="resetBtn" class="btn btn-danger btn-custom" onclick="resetForm()">Reset</button>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
